@@ -40,12 +40,16 @@ module RoleGeneratorHelpers
   # RoleRequirementTestHelper must be included to test RoleRequirement
   include RoleRequirementTestHelper
 EOF
+    begin
     insert_content_after(
       app_filename, 
       /class +Test::Unit::TestCase/, 
       test_helper_content,
       :unless => lambda {|content| /include +RoleRequirementTestHelper/.match(content) }
     ) && puts("Added RoleRequirementTestHelper include to #{app_filename}")
+    rescue
+      puts "Unable to add RoleRequirementTestHelper to test_helper.rb. Be sure to include RoleRequirementTestHelper in your testing framework."
+    end
   end
 
   def add_dependencies_to_application_rb
@@ -55,26 +59,14 @@ EOF
       app_filename = "#{RAILS_ROOT}/app/controllers/application.rb"
     end
     
-    auth_system_content = <<EOF
-  # AuthenticatedSystem must be included for RoleRequirement, and is provided by installing acts_as_authenticates and running 'script/generate authenticated account user'.
-  include AuthenticatedSystem
-EOF
-    
     role_requirement_content = <<EOF
   # You can move this into a different controller, if you wish.  This module gives you the require_role helpers, and others.
   include RoleRequirementSystem
 EOF
-
+   
     insert_content_after(
       app_filename, 
-      /class +ApplicationController/, 
-      auth_system_content,
-      :unless => lambda {|content| /include +AuthenticatedSystem/.match(content) }
-    ) && puts("Added ApplicationController include to #{app_filename}")
-    
-    insert_content_after(
-      app_filename, 
-      /include +AuthenticatedSystem/, 
+      /class ApplicationController.*/, 
       role_requirement_content,
       :unless => lambda {|content| /include +RoleRequirementSystem/.match(content) }
     ) && puts("Added RoleRequirement include to #{app_filename}")

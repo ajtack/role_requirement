@@ -1,11 +1,6 @@
 module AuthenticatedSystem
 #  protected
-    # Returns true or false if the user is logged in.
-    # Preloads @current_user with the user model if they're logged in.
-    def logged_in?
-      current_user != :false
-    end
-    
+   
     # Accesses the current user from the session.
     def current_user
       @current_user ||= (@current_user && User.find_by_id(@current_user)) || :false
@@ -50,7 +45,7 @@ module AuthenticatedSystem
     def login_required
       username, passwd = get_auth_data
       self.current_user ||= User.authenticate(username, passwd) || :false if username && passwd
-      logged_in? && authorized? ? true : access_denied
+      current_user && authorized? ? true : access_denied
     end
     
     # Redirect as appropriate when an access request fails.
@@ -81,16 +76,15 @@ module AuthenticatedSystem
       session[:return_to] = nil
     end
     
-    # Inclusion hook to make #current_user and #logged_in?
-    # available as ActionView helper methods.
+    # Inclusion hook to make #current_user available as ActionView helper method.
     def self.included(base)
-      base.send :helper_method, :current_user, :logged_in?
+      base.send :helper_method, :current_user
     end
 
     # When called with before_filter :login_from_cookie will check for an :auth_token
     # cookie and log the user back in if apropriate
     def login_from_cookie
-      return unless cookies[:auth_token] && !logged_in?
+      return unless cookies[:auth_token] && !current_user
       user = User.find_by_remember_token(cookies[:auth_token])
       if user && user.remember_token?
         user.remember_me

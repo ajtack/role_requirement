@@ -86,6 +86,9 @@ class RolesGenerator < Rails::Generator::NamedBase
       # users.yml doesn't exist.  Generate it from scratch
       @next_user_id = 1
       
+      # insure that the test directory exists...
+      FileUtils.mkdir_p 'test/fixtures' unless File.exists?('test/fixtures')
+
       m.template 'users_admin_fixture_with_roles.yml',
         File.join('test/fixtures', "#{users_table_name}.yml")
     end
